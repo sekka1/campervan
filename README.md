@@ -6,9 +6,18 @@ An Electron-based desktop application powered by the GitHub Copilot SDK that ser
 
 This application provides a conversational interface where users can ask questions about all things related to campervans—from vehicle specifications and maintenance tips to travel advice and DIY modifications. The AI agent combines structured knowledge stored in this repository with information from the web to deliver comprehensive, helpful answers.
 
+## Tech Stack
+
+- **Electron** — Cross-platform desktop application framework
+- **TypeScript** — Primary language for all application code
+- **GitHub Copilot SDK** — AI agent integration for natural conversation
+- **Vitest** — Unit and integration testing
+- **Playwright** — End-to-end testing
+
 ## Features
 
 - **Cross-Platform Desktop App** — Built with Electron for Windows and macOS
+- **TypeScript Throughout** — Fully typed codebase for reliability and maintainability
 - **GitHub Copilot SDK Integration** — Leverages advanced AI capabilities for natural conversation
 - **Structured Knowledge Base** — Local repository of campervan information the agent can reference
 - **Web-Enhanced Responses** — Supplements local knowledge with up-to-date web information
@@ -49,7 +58,8 @@ This dual approach allows the AI agent to access both human-readable content and
 
 - Node.js 18+
 - npm or yarn
-- GitHub Copilot SDK access
+- TypeScript 5.x
+- GitHub Copilot CLI installed and authenticated
 
 ### Installation
 

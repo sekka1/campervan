@@ -2,6 +2,18 @@
 
 This document defines how AI agents should interact with this repository and respond to user queries about campervans.
 
+## Technology Stack
+
+This Electron application is built with:
+
+- **TypeScript** — All application code (main process, renderer, preload scripts)
+- **Electron** — Cross-platform desktop framework
+- **GitHub Copilot SDK** — AI agent integration via `@github/copilot-sdk`
+- **Vitest** — Unit and integration testing
+- **Playwright** — End-to-end testing
+
+When contributing code to this repository, use TypeScript with strict mode enabled. Follow the conventions in `.github/instructions/` for TypeScript and Copilot SDK usage.
+
 ## Agent Purpose
 
 The Campervan AI Assistant is designed to:
