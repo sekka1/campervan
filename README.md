@@ -65,6 +65,11 @@ npm install
 npm start
 ```
 
+## Documentation
+
+- [AGENTS.md](AGENTS.md) — Guidelines for how the AI agent uses the knowledge base and responds to queries
+- [DEVELOPMENT.md](DEVELOPMENT.md) — Development best practices, testing strategies, and security guidelines
+
 ## Contributing
 
 Contributions are welcome! You can help by:
@@ -73,7 +78,7 @@ Contributions are welcome! You can help by:
 2. **Improving the app** — Enhance the Electron application and AI integration
 3. **Reporting issues** — File bugs or suggest features via GitHub Issues
 
-See [AGENTS.md](AGENTS.md) for guidelines on how the AI agent uses the knowledge base.
+Please review [DEVELOPMENT.md](DEVELOPMENT.md) for coding standards and [AGENTS.md](AGENTS.md) for knowledge base conventions.
 
 ## License
 
