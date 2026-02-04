@@ -6,6 +6,7 @@ interface StreamChunk {
   content: string;
   done: boolean;
   messageId: string;
+  error?: string;
 }
 
 interface ChatMessage {

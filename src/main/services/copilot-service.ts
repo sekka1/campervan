@@ -8,6 +8,33 @@
  * @see https://github.com/github/awesome-copilot/tree/main/cookbook/copilot-sdk/nodejs
  */
 import { CopilotClient, CopilotSession } from '@github/copilot-sdk';
+import { existsSync } from 'node:fs';
+
+/**
+ * Find the copilot CLI executable
+ * macOS apps launched from Finder don't inherit shell PATH,
+ * so we need to check common installation locations
+ */
+function findCopilotCli(): string | undefined {
+  const commonPaths = [
+    '/usr/local/bin/copilot',
+    '/opt/homebrew/bin/copilot',
+    `${process.env.HOME}/.local/bin/copilot`,
+    `${process.env.HOME}/bin/copilot`,
+    // npm global installs
+    '/usr/local/lib/node_modules/@github/copilot-cli/bin/copilot',
+    `${process.env.HOME}/.npm-global/bin/copilot`,
+  ];
+
+  for (const p of commonPaths) {
+    if (existsSync(p)) {
+      return p;
+    }
+  }
+
+  // Fall back to just 'copilot' and hope it's in PATH
+  return undefined;
+}
 
 export class CopilotService {
   private client: CopilotClient | null = null;
@@ -40,7 +67,13 @@ Always prioritize user safety in your recommendations.`;
   private async getSession(): Promise<CopilotSession> {
     try {
       if (!this.client) {
-        this.client = new CopilotClient({ logLevel: 'warning' });
+        const cliPath = findCopilotCli();
+        console.log(`Copilot CLI path: ${cliPath ?? 'using PATH'}`);
+        
+        this.client = new CopilotClient({ 
+          logLevel: 'warning',
+          ...(cliPath ? { cliPath } : {}),
+        });
       }
 
       if (!this.session) {

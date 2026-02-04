@@ -123,8 +123,20 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
         return { messageId };
       } catch (error) {
-        console.error('Error streaming chat:', error);
-        throw new Error('Failed to stream response. Please try again.');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('Error streaming chat:', errorMessage);
+        
+        // Send error through the stream so UI can display it
+        if (window && !window.isDestroyed()) {
+          window.webContents.send('chat:chunk', {
+            content: '',
+            done: true,
+            messageId,
+            error: errorMessage,
+          });
+        }
+        
+        throw new Error(errorMessage);
       }
     }
   );

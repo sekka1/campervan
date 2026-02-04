@@ -18,6 +18,7 @@ interface StreamChunk {
   content: string;
   done: boolean;
   messageId: string;
+  error?: string;
 }
 
 class CampervanChat {
@@ -69,7 +70,21 @@ class CampervanChat {
       if (this.currentStreamingMessage) {
         const textElement = this.currentStreamingMessage.querySelector('.message-text');
         if (textElement) {
-          if (chunk.done) {
+          if (chunk.error) {
+            // Error occurred - show error message
+            this.removeTypingIndicator(this.currentStreamingMessage);
+            textElement.innerHTML = this.formatMarkdown(
+              `❌ Error: ${chunk.error}\n\n` +
+              `**Troubleshooting:**\n` +
+              `- Ensure GitHub Copilot CLI is installed (\`copilot\` command)\n` +
+              `- Check that you have an active GitHub Copilot subscription\n` +
+              `- Try running \`copilot auth login\` in your terminal`
+            );
+            this.currentStreamingMessage.classList.add('error');
+            this.isStreaming = false;
+            this.currentStreamingMessage = null;
+            this.enableInput();
+          } else if (chunk.done) {
             // Streaming complete - format the final content
             const content = textElement.textContent ?? '';
             textElement.innerHTML = this.formatMarkdown(content);
