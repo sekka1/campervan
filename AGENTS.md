@@ -6,13 +6,64 @@ This document defines how AI agents should interact with this repository and res
 
 This Electron application is built with:
 
-- **TypeScript** — All application code (main process, renderer, preload scripts)
-- **Electron** — Cross-platform desktop framework
-- **GitHub Copilot SDK** — AI agent integration via `@github/copilot-sdk`
+- **TypeScript 5.x** — All application code (main process, renderer, preload scripts) with strict mode
+- **Electron 28.x** — Cross-platform desktop framework
+- **GitHub Copilot SDK** (`@github/copilot-sdk`) — Official SDK for AI agent integration
 - **Vitest** — Unit and integration testing
 - **Playwright** — End-to-end testing
 
+### GitHub Copilot SDK Integration
+
+The app uses the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) to process user questions. Key implementation details:
+
+```typescript
+import { CopilotClient, CopilotSession } from '@github/copilot-sdk';
+
+// Create client and start the CLI server
+const client = new CopilotClient();
+await client.start();
+
+// Create a session with custom system message
+const session = await client.createSession({
+  model: 'gpt-4o',
+  systemMessage: { content: 'You are a Campervan AI Assistant...' },
+});
+
+// Stream responses
+session.on('assistant.message_delta', (event) => {
+  process.stdout.write(event.data.deltaContent);
+});
+
+await session.send({ prompt: userQuestion });
+```
+
+**Requirements:**
+- GitHub Copilot CLI installed (`copilot` in PATH)
+- GitHub Copilot subscription or BYOK configuration
+
 When contributing code to this repository, use TypeScript with strict mode enabled. Follow the conventions in `.github/instructions/` for TypeScript and Copilot SDK usage.
+
+### Pre-Commit Workflow (REQUIRED)
+
+**Before committing and pushing any code changes to GitHub, always run:**
+
+```bash
+# 1. Lint - Check for code style issues
+npm run lint
+
+# 2. Build - Verify TypeScript compiles
+npm run build
+
+# 3. Run - Test that the app starts correctly
+npm start
+```
+
+All three commands must complete successfully before committing. This is mandatory for all code contributions to ensure:
+- ESLint rules are satisfied
+- TypeScript strict mode compilation passes
+- The Electron app launches without runtime errors
+
+**AI agents must verify these steps pass when making code changes.**
 
 ## Agent Purpose
 

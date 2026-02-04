@@ -1,12 +1,17 @@
 /**
  * Service for interacting with GitHub Copilot SDK
  * 
- * NOTE: The Copilot SDK integration is stubbed for now.
- * When the SDK becomes available, uncomment the import and implement the client.
+ * Uses the official @github/copilot-sdk to communicate with GitHub Copilot
+ * via the Copilot CLI in server mode.
+ * 
+ * @see https://github.com/github/copilot-sdk
+ * @see https://github.com/github/awesome-copilot/tree/main/cookbook/copilot-sdk/nodejs
  */
-// import { CopilotClient, SessionEvent } from '@github/copilot-sdk';
+import { CopilotClient, CopilotSession } from '@github/copilot-sdk';
 
 export class CopilotService {
+  private client: CopilotClient | null = null;
+  private session: CopilotSession | null = null;
   private systemPrompt: string;
 
   constructor() {
@@ -30,129 +35,130 @@ Always prioritize user safety in your recommendations.`;
   }
 
   /**
-   * Send a chat message and get a response
-   * 
-   * TODO: Implement actual Copilot SDK integration when available
+   * Get or create a Copilot client and session
    */
-  async chat(message: string, _context?: string): Promise<string> {
-    // For now, use placeholder responses
-    // When Copilot SDK is available, uncomment and implement:
-    /*
+  private async getSession(): Promise<CopilotSession> {
     try {
-      const client = await this.getClient();
-      const session = await client.createSession({ model: 'gpt-4.1' });
+      if (!this.client) {
+        this.client = new CopilotClient({ logLevel: 'warning' });
+      }
+
+      if (!this.session) {
+        this.session = await this.client.createSession({
+          systemMessage: {
+            content: this.systemPrompt,
+          },
+        });
+      }
+
+      return this.session;
+    } catch (error) {
+      console.error('Failed to create Copilot session:', error);
+      
+      // Provide helpful error messages
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('ENOENT')) {
+        throw new Error('Copilot CLI not found. Please install GitHub Copilot CLI and ensure "copilot" is in your PATH.');
+      } else if (errorMessage.includes('ECONNREFUSED')) {
+        throw new Error('Could not connect to Copilot CLI server. Please check your GitHub Copilot subscription.');
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Send a chat message and get a complete response
+   */
+  async chat(message: string, context?: string): Promise<string> {
+    try {
+      const session = await this.getSession();
+      
+      const prompt = context 
+        ? `${context}\n\nUser question: ${message}`
+        : message;
+
+      const response = await session.sendAndWait({ prompt }, 60000);
+      
+      if (response?.data?.content) {
+        return response.data.content;
+      }
+      
+      return 'I apologize, but I was unable to generate a response. Please try again.';
+    } catch (error) {
+      console.error('Copilot chat error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Stream a chat response chunk by chunk
+   */
+  async streamChat(
+    message: string,
+    context: string,
+    onChunk: (chunk: string, done: boolean) => void
+  ): Promise<void> {
+    try {
+      const session = await this.getSession();
 
       const prompt = context 
         ? `${context}\n\nUser question: ${message}`
         : message;
 
-      const response = await session.sendAndWait({
-        prompt,
-        systemMessage: this.systemPrompt,
+      // Set up event listeners before sending
+      const done = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Response timeout'));
+        }, 60000);
+        
+        const unsubscribe = session.on((event) => {
+          if (event.type === 'assistant.message_delta') {
+            const deltaContent = (event.data as { deltaContent?: string })?.deltaContent ?? '';
+            onChunk(deltaContent, false);
+          } else if (event.type === 'assistant.message') {
+            const data = event.data as { content?: string };
+            const content = data?.content ?? '';
+            if (content && content.length > 0) {
+              onChunk(content, false);
+            }
+          } else if (event.type === 'session.idle') {
+            clearTimeout(timeout);
+            unsubscribe();
+            onChunk('', true);
+            resolve();
+          } else if (event.type === 'session.error') {
+            const errorData = event.data as { message?: string };
+            clearTimeout(timeout);
+            unsubscribe();
+            reject(new Error(errorData?.message ?? 'Session error'));
+          }
+        });
       });
 
-      await client.stop();
-
-      return response?.data?.content ?? 'I apologize, but I was unable to generate a response. Please try again.';
+      await session.send({ prompt });
+      await done;
     } catch (error) {
-      console.error('Copilot chat error:', error);
+      console.error('Copilot stream error:', error);
       throw error;
     }
-    */
-    
-    return this.getPlaceholderResponse(message);
-  }
-
-  /**
-   * Stream a chat response
-   * 
-   * TODO: Implement actual Copilot SDK streaming when available
-   */
-  async streamChat(
-    message: string,
-    _context: string,
-    onChunk: (chunk: string, done: boolean) => void
-  ): Promise<void> {
-    // For now, simulate streaming with placeholder responses
-    // When Copilot SDK is available, implement actual streaming
-    
-    const response = this.getPlaceholderResponse(message);
-    const words = response.split(' ');
-    
-    for (let i = 0; i < words.length; i++) {
-      await this.delay(50);
-      const chunk = i === 0 ? words[i] : ' ' + words[i];
-      onChunk(chunk, false);
-    }
-    
-    onChunk('', true);
-  }
-
-  /**
-   * Placeholder response for development/testing
-   */
-  private getPlaceholderResponse(message: string): string {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes('sprinter')) {
-      return `The Mercedes Sprinter is one of the most popular campervan base vehicles! Here's what you should know:
-
-**Why Sprinter?**
-- Excellent build quality and reliability
-- Available in multiple lengths (144" and 170" wheelbase)
-- Good resale value
-- Available with 4x4 for off-road adventures
-
-**Considerations:**
-- Higher upfront cost compared to other vans
-- Mercedes parts and service can be expensive
-- The 170" extended version offers more living space but is harder to park
-
-Would you like more specific information about Sprinter specs, common maintenance items, or conversion ideas?`;
-    }
-    
-    if (lowerMessage.includes('solar') || lowerMessage.includes('electrical')) {
-      return `Great question about solar and electrical systems! Here's an overview:
-
-**Basic Solar Setup:**
-- 200-400W of solar panels for weekend use
-- 400-800W for full-time living
-- Pair with lithium batteries (LiFePO4) for best performance
-
-**Key Components:**
-1. Solar panels (rigid or flexible)
-2. Charge controller (MPPT recommended)
-3. Battery bank (lithium or AGM)
-4. Inverter (pure sine wave for sensitive electronics)
-
-**Pro Tips:**
-- Calculate your daily power usage first
-- Oversize your solar by 20-30% for cloudy days
-- Consider a DC-DC charger for alternator charging
-
-Need help calculating your power needs or choosing specific components?`;
-    }
-    
-    return `Thanks for your question about campervans! I'm the Campervan AI Assistant, ready to help you with:
-
-🚐 **Vehicle Information** - Sprinter, Transit, Promaster specs and comparisons
-🔧 **Maintenance** - Service schedules, troubleshooting, DIY repairs
-⚡ **Systems** - Electrical, plumbing, heating, and cooling
-🗺️ **Travel** - Route planning, camping spots, tips and tricks
-
-*Note: This is a development placeholder. Connect the GitHub Copilot SDK for full AI-powered responses.*
-
-How can I help you today?`;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
    * Cleanup resources
    */
   async dispose(): Promise<void> {
-    // Cleanup when Copilot SDK is integrated
+    try {
+      if (this.session) {
+        await this.session.destroy();
+        this.session = null;
+      }
+      if (this.client) {
+        await this.client.stop();
+        this.client = null;
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
   }
 }

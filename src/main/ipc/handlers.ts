@@ -42,6 +42,7 @@ const knowledgeService = new KnowledgeService(
 );
 
 export function setupIpcHandlers(ipcMain: IpcMain): void {
+  
   // Handle chat messages
   ipcMain.handle(
     IPC_CHANNELS.CHAT_SEND,
@@ -100,6 +101,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
       try {
         const relevantDocs = await knowledgeService.search(request.content);
+        
         const context = relevantDocs.length > 0
           ? `Use this campervan knowledge to help answer:\n\n${relevantDocs.map(d => d.content).join('\n\n')}`
           : '';

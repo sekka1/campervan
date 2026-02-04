@@ -8,11 +8,29 @@ This application provides a conversational interface where users can ask questio
 
 ## Tech Stack
 
-- **Electron** — Cross-platform desktop application framework
-- **TypeScript** — Primary language for all application code
-- **GitHub Copilot SDK** — AI agent integration for natural conversation
+- **Electron 28.x** — Cross-platform desktop application framework
+- **TypeScript 5.x** — Primary language for all application code (strict mode)
+- **GitHub Copilot SDK** (`@github/copilot-sdk`) — Official SDK for programmatic access to GitHub Copilot's agentic workflows via JSON-RPC
 - **Vitest** — Unit and integration testing
 - **Playwright** — End-to-end testing
+
+### GitHub Copilot SDK
+
+This application uses the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) to power AI responses. The SDK communicates with the Copilot CLI in server mode, providing:
+
+- **Streaming responses** — Real-time token-by-token output
+- **Session management** — Persistent conversation context
+- **Multiple models** — Access to GPT-4o, Claude, and other models
+- **Custom system prompts** — Tailored campervan assistant persona
+
+**SDK Documentation:**
+- [GitHub Copilot SDK](https://github.com/github/copilot-sdk) — Official SDK repository
+- [Node.js/TypeScript SDK](https://github.com/github/copilot-sdk/tree/main/nodejs) — SDK documentation and API reference
+- [SDK Cookbook](https://github.com/github/awesome-copilot/tree/main/cookbook/copilot-sdk/nodejs) — Practical recipes and examples
+
+**Requirements:**
+- GitHub Copilot CLI installed and in PATH (`copilot` command available)
+- GitHub Copilot subscription (free tier available with limited usage)
 
 ## Features
 
@@ -89,6 +107,41 @@ Contributions are welcome! You can help by:
 3. **Reporting issues** — File bugs or suggest features via GitHub Issues
 
 Please review [DEVELOPMENT.md](DEVELOPMENT.md) for coding standards and [AGENTS.md](AGENTS.md) for knowledge base conventions.
+
+### Pre-Commit Checklist
+
+**Always run the following commands before committing and pushing to GitHub:**
+
+```bash
+# 1. Run linting to catch code style issues
+npm run lint
+
+# 2. Build the application to verify compilation
+npm run build
+
+# 3. Start the app to verify it runs correctly
+npm start
+```
+
+All three steps must pass without errors before committing. This ensures:
+- Code follows project style guidelines (ESLint)
+- TypeScript compiles without errors
+- The application launches and functions correctly
+
+## Releases
+
+Releases are automatically built and published when a version tag is pushed:
+
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The GitHub Actions workflow will:
+1. Build the app for both macOS and Windows
+2. Create installers (DMG/ZIP for macOS, EXE for Windows)
+3. Attach the installers to a GitHub Release
 
 ## License
 
